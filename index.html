@@ -120,16 +120,12 @@
         let loadedCount = 0;
         let lazyLoadingEnabled = true;
         
-        // Sample Lottie animation URLs (you can replace these with your own)
+        // Sample dotLottie animation URLs (replace with your GitHub URLs)
         const sampleAnimations = [
-            'https://assets3.lottiefiles.com/packages/lf20_V9t630.json',
-            'https://assets2.lottiefiles.com/packages/lf20_khzniaya.json',
-            'https://assets4.lottiefiles.com/packages/lf20_fcfjwiyb.json',
-            'https://assets1.lottiefiles.com/packages/lf20_kuhijlbh.json',
-            'https://assets5.lottiefiles.com/packages/lf20_wcc1ssfs.json',
-            'https://assets9.lottiefiles.com/packages/lf20_xyadoh9h.json',
-            'https://assets10.lottiefiles.com/packages/lf20_s2lryxtd.json',
-            'https://assets6.lottiefiles.com/packages/lf20_myejiggw.json'
+            'https://graciaclarak.github.io/fieldex-test/animations/Hero.lottie',
+            'https://graciaclarak.github.io/fieldex-test/animations/AI---1.lottie',
+            'https://graciaclarak.github.io/fieldex-test/animations/AI---2.lottie',
+            'https://graciaclarak.github.io/fieldex-test/animations/AI---3.lottie',
         ];
 
         function initializeTest() {
@@ -142,7 +138,7 @@
                 item.className = 'animation-item';
                 item.innerHTML = `
                     <div class="lottie-container">
-                        <lottie-player
+                        <dotlottie-player
                             id="animation-${index}"
                             src="${url}"
                             background="transparent"
@@ -151,7 +147,7 @@
                             loop
                             autoplay
                             ${lazyLoadingEnabled ? 'class="lazy-load"' : ''}
-                        ></lottie-player>
+                        ></dotlottie-player>
                     </div>
                     <h3>Animation ${index + 1}</h3>
                 `;
@@ -162,7 +158,7 @@
         }
 
         function loadAllAnimations() {
-            const players = document.querySelectorAll('lottie-player');
+            const players = document.querySelectorAll('dotlottie-player');
             players.forEach(player => {
                 if (player.classList.contains('lazy-load')) {
                     player.classList.add('loaded');
@@ -174,7 +170,7 @@
         }
 
         function clearAllAnimations() {
-            const players = document.querySelectorAll('lottie-player');
+            const players = document.querySelectorAll('dotlottie-player');
             players.forEach(player => {
                 player.stop();
                 player.classList.remove('loaded');
