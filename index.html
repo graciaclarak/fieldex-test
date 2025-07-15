@@ -66,7 +66,7 @@
             background: #0056b3;
         }
         .lazy-load {
-            opacity: 0;
+            opacity: 0.3;
             transition: opacity 0.3s ease;
         }
         .lazy-load.loaded {
@@ -80,6 +80,17 @@
             margin-bottom: 20px;
             text-align: center;
         }
+        .status {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        .loaded-status {
+            color: #28a745;
+        }
+        .error-status {
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -87,6 +98,7 @@
         <div>Memory Usage: <span id="memoryUsage">Calculating...</span></div>
         <div>Loaded Animations: <span id="loadedCount">0</span></div>
         <div>Total Animations: <span id="totalCount">0</span></div>
+        <div>Status: <span id="overallStatus">Initializing...</span></div>
     </div>
 
     <div class="container">
@@ -102,6 +114,7 @@
             <button onclick="clearAllAnimations()">Clear All</button>
             <button onclick="testMemoryUsage()">Test Memory</button>
             <button onclick="toggleLazyLoading()">Toggle Lazy Loading</button>
+            <button onclick="reloadAnimations()">Reload Animations</button>
         </div>
 
         <div class="animation-grid" id="animationGrid">
@@ -109,18 +122,15 @@
         </div>
     </div>
 
-    <!-- Lottie Player -->
-    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
-    
-    <!-- Lazy Loading Script -->
-    <script src='https://cdn.jsdelivr.net/gh/athlonstudio/lottie-lazy-loader@latest/src/lottieLazyLoading.min.js'></script>
+    <!-- DotLottie Player (correct script for .lottie files) -->
+    <script src="https://unpkg.com/@dotlottie/player-component@latest/dist/dotlottie-player.mjs" type="module"></script>
 
     <script>
         let animations = [];
         let loadedCount = 0;
         let lazyLoadingEnabled = true;
         
-        // Sample dotLottie animation URLs (replace with your GitHub URLs)
+        // Sample dotLottie animation URLs
         const sampleAnimations = [
             'https://graciaclarak.github.io/fieldex-test/animations/Hero.lottie',
             'https://graciaclarak.github.io/fieldex-test/animations/AI---1.lottie',
@@ -130,7 +140,11 @@
 
         function initializeTest() {
             const grid = document.getElementById('animationGrid');
+            grid.innerHTML = ''; // Clear existing content
+            loadedCount = 0;
+            
             document.getElementById('totalCount').textContent = sampleAnimations.length;
+            document.getElementById('overallStatus').textContent = 'Loading...';
             
             // Create animation containers
             sampleAnimations.forEach((url, index) => {
@@ -145,13 +159,35 @@
                             speed="1"
                             style="width: 150px; height: 150px;"
                             loop
-                            autoplay
+                            autoplay="${!lazyLoadingEnabled}"
                             ${lazyLoadingEnabled ? 'class="lazy-load"' : ''}
                         ></dotlottie-player>
                     </div>
                     <h3>Animation ${index + 1}</h3>
+                    <div class="status" id="status-${index}">Loading...</div>
                 `;
                 grid.appendChild(item);
+                
+                // Add event listeners for each animation
+                setTimeout(() => {
+                    const player = document.getElementById(`animation-${index}`);
+                    if (player) {
+                        player.addEventListener('ready', () => {
+                            document.getElementById(`status-${index}`).textContent = 'Ready';
+                            document.getElementById(`status-${index}`).className = 'status loaded-status';
+                            if (!lazyLoadingEnabled) {
+                                loadedCount++;
+                                updateStats();
+                            }
+                        });
+                        
+                        player.addEventListener('error', (e) => {
+                            document.getElementById(`status-${index}`).textContent = 'Error loading';
+                            document.getElementById(`status-${index}`).className = 'status error-status';
+                            console.error(`Animation ${index} error:`, e);
+                        });
+                    }
+                }, 100);
             });
             
             updateStats();
@@ -159,30 +195,56 @@
 
         function loadAllAnimations() {
             const players = document.querySelectorAll('dotlottie-player');
-            players.forEach(player => {
+            loadedCount = 0;
+            
+            players.forEach((player, index) => {
                 if (player.classList.contains('lazy-load')) {
                     player.classList.add('loaded');
                 }
+                
+                // Force play and count as loaded
                 player.play();
+                loadedCount++;
+                
+                // Update individual status
+                const statusElement = document.getElementById(`status-${index}`);
+                if (statusElement) {
+                    statusElement.textContent = 'Playing';
+                    statusElement.className = 'status loaded-status';
+                }
             });
-            loadedCount = sampleAnimations.length;
+            
+            document.getElementById('overallStatus').textContent = 'All animations loaded';
             updateStats();
         }
 
         function clearAllAnimations() {
             const players = document.querySelectorAll('dotlottie-player');
-            players.forEach(player => {
+            players.forEach((player, index) => {
                 player.stop();
                 player.classList.remove('loaded');
+                
+                // Update individual status
+                const statusElement = document.getElementById(`status-${index}`);
+                if (statusElement) {
+                    statusElement.textContent = 'Stopped';
+                    statusElement.className = 'status';
+                }
             });
+            
             loadedCount = 0;
+            document.getElementById('overallStatus').textContent = 'All animations cleared';
             updateStats();
+        }
+
+        function reloadAnimations() {
+            document.getElementById('overallStatus').textContent = 'Reloading...';
+            initializeTest();
         }
 
         function toggleLazyLoading() {
             lazyLoadingEnabled = !lazyLoadingEnabled;
-            const grid = document.getElementById('animationGrid');
-            grid.innerHTML = '';
+            document.getElementById('overallStatus').textContent = `Lazy loading ${lazyLoadingEnabled ? 'enabled' : 'disabled'}`;
             initializeTest();
         }
 
@@ -229,7 +291,9 @@
         setInterval(updateStats, 2000);
         
         // Initialize when page loads
-        window.addEventListener('load', initializeTest);
+        window.addEventListener('load', () => {
+            setTimeout(initializeTest, 500);
+        });
     </script>
 </body>
 </html>
